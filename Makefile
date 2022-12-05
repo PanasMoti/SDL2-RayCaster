@@ -34,7 +34,7 @@ lrun:
 ldebug:
 	$(CC) $(SRC_FILES) $(COMPILER_FLAGS) -o0 $(LINKER_FLAGS) -o $(BIN_DIR)/debug$(EXE_NAME)
 	$(BIN_DIR)/debug$(EXE_NAME)
-	rm -rf $(BIN_DIR)/debug$(EXE_NAME)
+	rm $(BIN_DIR)/debug$(EXE_NAME)
 
 lclean:
 	rm $(BIN_DIR)/*.o
@@ -44,6 +44,7 @@ wbuild:
 wdebug:
 	$(CC) $(SRC_FILES) $(COMPILER_FLAGS) -o0 $(WIN_LINK) $(LINKER_FLAGS) -o $(BIN_DIR)/debug$(WIN_EXE_NAME)
 	$(BIN_DIR)/debug$(WIN_EXE_NAME)
+	del $(BIN_DIR)\debug$(WIN_EXE_NAME)
 wrun:
 	$(BIN_DIR)/$(WIN_EXE_NAME)
 
@@ -52,6 +53,6 @@ wclean:
 
 
 help:
-	$(info linux   commands: lbuild,ldebug,lrun)
-	$(info windows commands: wbuild,wdebug,wrun)
-	@echo off
+	$(info linux   commands: lbuild, 	ldebug,		lrun,		lclean)
+	$(info windows commands: wbuild,	wdebug,		wrun,		wclean)
+	@echo --------------------------------------
