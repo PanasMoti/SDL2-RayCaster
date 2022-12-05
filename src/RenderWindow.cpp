@@ -1,4 +1,5 @@
 #include "RenderWindow.hpp"
+#include <iostream>
 
 RenderWindow::RenderWindow(const char* title,int width,int height)
     :ren(NULL),win(NULL)
@@ -13,6 +14,7 @@ RenderWindow::RenderWindow(const char* title,int width,int height)
     this->H = {{-1.0f,0.0f},{0.0f,1.0f}};
     this->bgcolor = {0.4f,0.4f,0.4f};
     this->shouldClose = false;
+    this->keymn = KeyboardManager("wasd");
 }
 
 void RenderWindow::SetColor(linalg::aliases::float3 color) {
@@ -37,6 +39,7 @@ void RenderWindow::CleanUp() {
 
 void RenderWindow::HandleEvent(SDL_Event* event) {
     if(event->type == SDL_QUIT) this->shouldClose = true;
+    if(event->type == SDL_KEYDOWN ||  event->type == SDL_KEYUP) this->HandleInput(&event->key);
 }
 SDL_Renderer* RenderWindow::GetRen() {
     return this->ren;
@@ -53,4 +56,26 @@ void RenderWindow::DrawLineF(float2 start,float2 end) {
     start = this->TranslatePoint(start);
     end = this->TranslatePoint(end);
     SDL_RenderDrawLineF(this->ren,start.x,start.y,end.x,end.y);
+}
+
+void RenderWindow::HandleInput(SDL_KeyboardEvent* event) {
+    keycode k = static_cast<keycode>(event->keysym.sym);
+    switch(event->type) {
+        case SDL_KEYDOWN:
+            this->keymn.Press(k);
+            break;
+        case SDL_KEYUP:
+            this->keymn.Release(k);
+            break;
+    }
+}
+
+void RenderWindow::Update() {
+    for(unsigned char ch : "wasd") {
+        auto k = this->keymn[ch];
+        if(k != NULL) {
+            // if(*k) std::cout << ch << std::endl;
+            //todo add thingies here
+        }
+    }
 }

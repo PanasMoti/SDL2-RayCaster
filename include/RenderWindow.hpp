@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include "imports/linalg.h"
+#include "KeyboardManager.hpp"
 
 using namespace linalg::aliases;
 
@@ -19,6 +20,9 @@ class RenderWindow
         bool ShouldClose();
         void HandleEvent(SDL_Event*);
         void DrawLineF(float2,float2);
+        void HandleInput(SDL_KeyboardEvent*);
+        void KeysDown();
+        void Update();
     private:
         SDL_Window* win;
         SDL_Renderer* ren;
@@ -27,6 +31,7 @@ class RenderWindow
         linalg::mat<float,2,2> H;
         float3 bgcolor;
         bool shouldClose;
+        KeyboardManager keymn;
 
 };
 
