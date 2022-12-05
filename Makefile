@@ -1,5 +1,5 @@
 #project name
-PROJECT_NAME = Sdl2RayCaster
+PROJECT_NAME = OhGodPleaseHelpMe
 
 #directories
 BIN_DIR = bin
