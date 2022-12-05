@@ -5,6 +5,7 @@
 #include "imports/linalg.h"
 #include "KeyboardManager.hpp"
 #include "Player.hpp"
+#include "Image.hpp"
 
 
 using namespace linalg::aliases;
@@ -67,7 +68,7 @@ class RenderWindow
         void DrawMouse();
         float2 GetMouse();
         void VertLine(int x,int y0,int y1,float3 color);
-        
+        void SetColorP(const Pixel3u&);
         void DrawRays();
     private:
         SDL_Window* win;
@@ -80,6 +81,7 @@ class RenderWindow
         KeyboardManager keymn;
         int2 mouse;
         Player* player;
+        std::array<Image,5> textures;
 
 };
 

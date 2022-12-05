@@ -17,6 +17,10 @@ RenderWindow::RenderWindow(const char* title,int width,int height)
     this->keymn = KeyboardManager("wasd");
     this->mouse = {0,0};
     this->player = new Player();
+    this->textures[0] = Image("res/rock.ppm");
+    this->textures[1] = Image("res/tex.ppm");
+    this->textures[2] = Image("res/tex1.ppm");
+    this->textures[3] = Image("res/tex2.ppm");
 }
 
 void RenderWindow::SetColor(linalg::aliases::float3 color) {
@@ -147,6 +151,10 @@ void RenderWindow::VertLine(int x,int y1,int y2,float3 color) {
     SDL_RenderDrawLine(this->ren,x,y1,x,y2);
 }
 
+void RenderWindow::SetColorP(const Pixel3u& color) {
+    SDL_SetRenderDrawColor(this->ren,color.r,color.g,color.b,255);
+}
+
 void RenderWindow::DrawRays() {
     int w = this->res.x;
     int h = this->res.y;
@@ -221,30 +229,30 @@ void RenderWindow::DrawRays() {
         if (drawEnd >= h)
             drawEnd = h - 1;
 
-        //*choose wall color:
-        float3 color;
-        switch (worldMap[map.x][map.y])
-        {
-        case 1:
-            color = {1.0f, 0.0f, 0.0f}; //? red
-            break;
-        case 2:
-            color = {0.0f, 1.0f, 0.0f}; //? green
-            break;
-        case 3:
-            color = {0.0f, 0.0f, 1.0f}; //? blue
-            break;
-        case 4:
-            color = {1.0f, 1.0f, 1.0f}; //? white
-            break;
-        default:
-            color = {1.0f, 1.0f, 0.0f}; //? yellow
-            break;
+
+        int texNum = worldMap[map.x][map.y] - 1;//1 subtracted from it so that texture 0 can be used!
+        int texWidth = this->textures[texNum].Width();
+        int texHeight = this->textures[texNum].Height();
+        float wallX;
+        if(side == 0) wallX = player->pos.y + perpWallDist*rayDir.y;
+        else          wallX = player->pos.x + perpWallDist*rayDir.x;
+        wallX -= floor(wallX);
+
+        int texX = int(wallX*float(texWidth));
+        if(side == 0 && rayDir.x > 0) texX = texWidth - texX - 1;
+        if(side == 1 && rayDir.y < 0) texX = texWidth - texX - 1;
+
+        float stepT = 1.0f*texHeight/lineHeight;
+        float texPos = (drawStart - h / 2 + lineHeight / 2) * stepT;
+
+        for(int y = drawStart; y < drawEnd; y++) {
+            // Cast the texture coordinate to integer, and mask with (texHeight - 1) in case of overflow
+            int texY = (int)texPos & (texHeight - 1);
+            texPos += stepT;
+
+            Pixel3u color = this->textures[texNum](texX,texY);
+            this->SetColorP(color);
+            SDL_RenderDrawPoint(this->ren,x,y);
         }
-        if (side == 1)
-        {
-            color *= 0.5f; //?shade
-        }
-        this->VertLine(x,drawStart,drawEnd,color);
     }
 }
