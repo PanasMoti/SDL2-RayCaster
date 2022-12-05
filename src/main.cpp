@@ -7,11 +7,13 @@
 
 
 
+
 int main(int argc,char** argv) {
     SDL_Init(SDL_INIT_EVERYTHING);
-    RenderWindow win("title",500,500);
+    RenderWindow win("title",screenWidth,screenHeight);
     auto timer = new Clock();
     while(!win.ShouldClose()) {
+    
         SDL_Event event;
         while(SDL_PollEvent(&event)) {
             win.HandleEvent(&event);
@@ -19,8 +21,7 @@ int main(int argc,char** argv) {
         timer->Update();
         win.Update(timer->DeltaTime());
         win.BeginDraw();
-        win.SetColor({1.0f,0.0f,0.0f});
-        win.DrawLineF({0.0f,0.0f},{100.0f,100.0f});
+        win.DrawRays();
         win.EndDraw();
     }
     win.CleanUp();
