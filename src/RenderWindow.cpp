@@ -9,7 +9,7 @@ RenderWindow::RenderWindow(const char* title,int width,int height)
     if(win == NULL) {
         fprintf(stderr,"%s\n",SDL_GetError());
     }
-    this->ren = SDL_CreateRenderer(this->win,-1,SDL_RENDERER_ACCELERATED);
+    this->ren = SDL_CreateRenderer(this->win,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     this->O = 0.5f*this->res;
     this->H = {{-1.0f,0.0f},{0.0f,1.0f}};
     this->bgcolor = {0.4f,0.4f,0.4f};
@@ -70,7 +70,7 @@ void RenderWindow::HandleInput(SDL_KeyboardEvent* event) {
     }
 }
 
-void RenderWindow::Update() {
+void RenderWindow::Update(float deltaTime) {
     for(unsigned char ch : "wasd") {
         auto k = this->keymn[ch];
         if(k != NULL) {
@@ -78,4 +78,5 @@ void RenderWindow::Update() {
             //todo add thingies here
         }
     }
+    
 }

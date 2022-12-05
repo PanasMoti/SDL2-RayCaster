@@ -22,7 +22,7 @@ class RenderWindow
         void DrawLineF(float2,float2);
         void HandleInput(SDL_KeyboardEvent*);
         void KeysDown();
-        void Update();
+        void Update(float deltaTime);
     private:
         SDL_Window* win;
         SDL_Renderer* ren;
