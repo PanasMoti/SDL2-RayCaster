@@ -24,3 +24,8 @@ Pixel3u Pixel3u::operator~() const {
 std::ostream& operator<<(std::ostream& os, const Pixel3u& pixel) {
     return os << "[" << (int)pixel.r << "," << (int)pixel.g << "," << (int)pixel.b << "]" ;
 }
+
+uint32_t Pixel3u::ToSurfacePixel() const {
+    return (this->r << 16) | (this->g << 8) | (this->b << 0);
+        //? [R] [G] [B] [A]
+}

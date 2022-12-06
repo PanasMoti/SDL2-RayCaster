@@ -1,4 +1,5 @@
 #include "Image.hpp"
+#include <iostream>
 
 Image::Image() {
     this->NotFound();
@@ -39,7 +40,7 @@ Image::Image(const char* path) {
     }
     catch(const std::exception& e)
     {
-        fprintf(stderr,"couldn't find/load the picture at '%s' resulting to not found!\n",path);
+        std::cerr << "\"" << path << "\" was not found" << std::endl;
         this->NotFound();
     }
     

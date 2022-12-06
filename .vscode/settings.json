@@ -1,7 +1,9 @@
 {
 
     "files.associations": {
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "*.tcc": "cpp",
+        "limits": "cpp"
     },
     "better-comments.tags": [
         {

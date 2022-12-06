@@ -1,6 +1,9 @@
 #include "RenderWindow.hpp"
 #include <iostream>
 
+
+bool temp1 = false;
+
 RenderWindow::RenderWindow(const char* title,int width,int height)
     :ren(NULL),win(NULL)
 {
@@ -12,7 +15,6 @@ RenderWindow::RenderWindow(const char* title,int width,int height)
     this->ren = SDL_CreateRenderer(this->win,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     this->O = 0.5f*this->res;
     this->H = {{1.0f,0.0f},{0.0f,1.0f}};
-    this->bgcolor = {0.4f,0.4f,0.4f};
     this->shouldClose = false;
     this->keymn = KeyboardManager("wasd");
     this->mouse = {0,0};
@@ -22,8 +24,19 @@ RenderWindow::RenderWindow(const char* title,int width,int height)
     this->textures[2] = Image("res/tex1.ppm");
     this->textures[3] = Image("res/tex2.ppm");
     this->textures[4] = Image("res/tex3.ppm");
+    this->surface = SDL_CreateRGBSurface(
+        0,this->res.x,this->res.y,32,0,0,0,0
+    );
+    this->bg = 255;
+    
 }
 
+void RenderWindow::SetPixel(int x,int y, Uint32 pixel) {
+    Uint32 * const target_pixel = (Uint32 *) ((Uint8 *) surface->pixels
+                                             + y * surface->pitch
+                                             + x * surface->format->BytesPerPixel);
+    *target_pixel = pixel;
+}
 void RenderWindow::SetColor(linalg::aliases::float3 color) {
     Uint8 rgb[3];
     for(int i = 0; i < 3; i++) {
@@ -32,11 +45,20 @@ void RenderWindow::SetColor(linalg::aliases::float3 color) {
     }
     SDL_SetRenderDrawColor(this->ren,rgb[0],rgb[1],rgb[2],255);
 }
+
+void RenderWindow::ClearSurfaceBuffer() {
+    SDL_LockSurface(this->surface);
+    SDL_memset(surface->pixels, this->bg, surface->h * surface->pitch);
+    SDL_UnlockSurface(this->surface);
+}
+
 void RenderWindow::BeginDraw() {
     SDL_RenderClear(this->ren);
+    this->ClearSurfaceBuffer();
+    
 }
 void RenderWindow::EndDraw() {
-    this->SetColor(this->bgcolor);
+    // this->SetColor(this->bgcolor);
     SDL_RenderPresent(this->ren);
 }
 void RenderWindow::CleanUp() {
@@ -78,20 +100,19 @@ void RenderWindow::HandleInput(SDL_KeyboardEvent* event) {
 }
 
 void RenderWindow::Update(float deltaTime) {
+    if(this->bg == 255) temp1 = true;
+    if(this->bg == 1) temp1 = false;
+    if(temp1) this->bg--;
+    else this->bg++;
     float dt = 0.001f*deltaTime;
     SDL_GetMouseState(&this->mouse.x,&this->mouse.y);
-    for(unsigned char ch : "wasd") {
-        auto k = this->keymn[ch];
-        if(k != NULL) {
-            // if(*k) std::cout << ch << std::endl;
-            //todo add thingies here
-        }
-    }
+    float moveSpeed = player->speed.x * dt;
+    //todo: need to check if there is a wall infront of the player or behind them
     if(*this->keymn['w']) {
-        player->pos += player->dir*player->speed.x*dt;
+        player->pos += player->dir*moveSpeed;
     }
     if(*this->keymn['s']) {
-        player->pos -= player->dir*player->speed.x*dt;
+        player->pos -= player->dir*moveSpeed;
     }
     float rotSpeed = player->speed.y*dt;
     
@@ -156,10 +177,16 @@ void RenderWindow::SetColorP(const Pixel3u& color) {
     SDL_SetRenderDrawColor(this->ren,color.r,color.g,color.b,255);
 }
 
+void RenderWindow::DrawSurface() {
+    SDL_Texture* tex = SDL_CreateTextureFromSurface(this->ren,this->surface);
+    SDL_RenderCopy(this->ren,tex,nullptr,nullptr);
+}
+
 void RenderWindow::DrawRays() {
     int w = this->res.x;
     int h = this->res.y;
     for(int x = 0; x < w; x++) {
+        #pragma region Mathematics -- DO NOT TOUCH
         float cameraX = 2*x/float(w)-1;
         float2 rayDir = player->dir + player->plane*cameraX;
         int2 map = {int(player->pos.x),int(player->pos.y)};
@@ -245,30 +272,17 @@ void RenderWindow::DrawRays() {
 
         float stepT = 1.0f*texHeight/lineHeight;
         float texPos = (drawStart - h / 2 + lineHeight / 2) * stepT;
+        #pragma endregion
 
-        //* draw textured walls
-        //! bad
-        //fixme : this needs to be reworked ; currently causes fps drop
-        // for(int y = drawStart; y < drawEnd; y++) {
-        //     // Cast the texture coordinate to integer, and mask with (texHeight - 1) in case of overflow
-        //     int texY = (int)texPos & (texHeight - 1);
-        //     texPos += stepT;
-
-        //     Pixel3u color = this->textures[texNum](texX,texY);
-        //     this->SetColorP(color);
-        //     SDL_RenderDrawPoint(this->ren,x,y);
-        // }
-        //* draw untextured walls:
-        //! good?
-        //fixme: can't draw textures
-        float3 color[5] = {
-            {1.0f,0.0f,0.0f},
-            {0.0f,1.0f,0.0f},
-            {0.0f,0.0f,1.0f},
-            {1.0f,1.0f,0.0f},
-            {1.0f,0.5f,0.0f}
-        };
-        float scale = (side == 1) ? 0.5f : 1.0f;
-        this->VertLine(x,drawStart,drawEnd,color[texNum]*scale);
+        //* storing the colors of the pixels to a buffer (surface)
+        for(int y = drawStart; y < drawEnd; y++) {
+            // Cast the texture coordinate to integer, and mask with (texHeight - 1) in case of overflow
+            int texY = (int)texPos & (texHeight - 1);
+            texPos += stepT;
+            float s = (side == 1) ? 0.5f : 1.0f;
+            Pixel3u color = this->textures[texNum](texX,texY)*s;
+            this->SetPixel(x,y,color.ToSurfacePixel());
+        }
     }
+    this->DrawSurface(); //? draw all the pixels at one go from the buffer
 }

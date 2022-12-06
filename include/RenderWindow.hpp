@@ -45,6 +45,7 @@ static inline int worldMap[mapWidth][mapHeight]=
 
 };
 
+//note to self: i should probably remove the origion point and the related functions since i am not using them
 class RenderWindow 
 {
     public:
@@ -70,18 +71,22 @@ class RenderWindow
         void VertLine(int x,int y0,int y1,float3 color);
         void SetColorP(const Pixel3u&);
         void DrawRays();
+        void SetPixel(int x,int y, Uint32 pixel);
+        void DrawSurface();
+        void ClearSurfaceBuffer();
     private:
         SDL_Window* win;
         SDL_Renderer* ren;
         uint2 res;
         float2 O;
         linalg::mat<float,2,2> H;
-        float3 bgcolor;
+        Uint32 bg;
         bool shouldClose;
         KeyboardManager keymn;
         int2 mouse;
         Player* player;
         std::array<Image,5> textures;
+        SDL_Surface* surface;
 
 };
 

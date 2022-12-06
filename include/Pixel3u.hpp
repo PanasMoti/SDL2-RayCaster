@@ -18,6 +18,7 @@ struct Pixel3u
     Pixel3u operator*(float v) const;
     Pixel3u operator~() const;
 
+    uint32_t ToSurfacePixel() const;
 
 
     friend std::ostream& operator<<(std::ostream& os, const Pixel3u& pixel);
