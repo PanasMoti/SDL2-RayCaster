@@ -135,14 +135,14 @@ void RenderWindow::ResetOrigin() {
 
 void RenderWindow::DrawPoint(float2 pos,float2 size) {
     pos = this->TranslatePoint(pos);
-    SDL_FRect r = {.x = pos.x,.y=pos.y,.w=size.x,.h=size.y};
+    SDL_FRect r = {pos.x,pos.y,size.x,size.y};
     SDL_RenderFillRectF(this->ren,&r);
 }
 
 void RenderWindow::DrawMouse() {
     //note the mouse position shouldn't be translated to fit the origin
     this->SetColor({1.0f,0.0f,0.0f});
-    SDL_Rect r = {.x=this->mouse.x-4,.y=this->mouse.y-4,.w=8,.h=8};
+    SDL_Rect r = {this->mouse.x-4,this->mouse.y-4,8,8};
     SDL_RenderFillRect(this->ren,&r);
 }
 
@@ -246,14 +246,29 @@ void RenderWindow::DrawRays() {
         float stepT = 1.0f*texHeight/lineHeight;
         float texPos = (drawStart - h / 2 + lineHeight / 2) * stepT;
 
-        for(int y = drawStart; y < drawEnd; y++) {
-            // Cast the texture coordinate to integer, and mask with (texHeight - 1) in case of overflow
-            int texY = (int)texPos & (texHeight - 1);
-            texPos += stepT;
+        //* draw textured walls
+        //! bad
+        //fixme : this needs to be reworked ; currently causes fps drop
+        // for(int y = drawStart; y < drawEnd; y++) {
+        //     // Cast the texture coordinate to integer, and mask with (texHeight - 1) in case of overflow
+        //     int texY = (int)texPos & (texHeight - 1);
+        //     texPos += stepT;
 
-            Pixel3u color = this->textures[texNum](texX,texY);
-            this->SetColorP(color);
-            SDL_RenderDrawPoint(this->ren,x,y);
-        }
+        //     Pixel3u color = this->textures[texNum](texX,texY);
+        //     this->SetColorP(color);
+        //     SDL_RenderDrawPoint(this->ren,x,y);
+        // }
+        //* draw untextured walls:
+        //! good?
+        //fixme: can't draw textures
+        float3 color[5] = {
+            {1.0f,0.0f,0.0f},
+            {0.0f,1.0f,0.0f},
+            {0.0f,0.0f,1.0f},
+            {1.0f,1.0f,0.0f},
+            {1.0f,0.5f,0.0f}
+        };
+        float scale = (side == 1) ? 0.5f : 1.0f;
+        this->VertLine(x,drawStart,drawEnd,color[texNum]*scale);
     }
 }
