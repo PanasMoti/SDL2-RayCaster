@@ -25,9 +25,11 @@ Image::Image(const char* path) {
     try
     {
         std::ifstream ifs(path);
+        if(!ifs) throw std::exception();
         PNM::Info info;
         std::vector<uint8_t> temp;
         ifs >> PNM::load(temp, info);
+        if(!info.valid()) throw std::exception();
         this->width = info.width();
         this->height = info.height();
         for (int i = 0; i < this->width * this->height * 3; i += 3)

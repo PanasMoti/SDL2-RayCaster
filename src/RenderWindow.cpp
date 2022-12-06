@@ -21,6 +21,7 @@ RenderWindow::RenderWindow(const char* title,int width,int height)
     this->textures[1] = Image("res/tex.ppm");
     this->textures[2] = Image("res/tex1.ppm");
     this->textures[3] = Image("res/tex2.ppm");
+    this->textures[4] = Image("res/tex3.ppm");
 }
 
 void RenderWindow::SetColor(linalg::aliases::float3 color) {
