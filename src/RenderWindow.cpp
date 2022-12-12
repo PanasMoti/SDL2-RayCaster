@@ -58,7 +58,6 @@ void RenderWindow::BeginDraw() {
     
 }
 void RenderWindow::EndDraw() {
-    // this->SetColor(this->bgcolor);
     SDL_RenderPresent(this->ren);
 }
 void RenderWindow::CleanUp() {
@@ -106,7 +105,7 @@ void RenderWindow::Update(float deltaTime) {
     else this->bg++;
     float dt = 0.001f*deltaTime;
     SDL_GetMouseState(&this->mouse.x,&this->mouse.y);
-    float moveSpeed = player->speed.x * dt;
+    float moveSpeed = player->speed.x*dt;
     //todo: need to check if there is a wall infront of the player or behind them
     if(*this->keymn['w']) {
         player->pos += player->dir*moveSpeed;
@@ -116,6 +115,8 @@ void RenderWindow::Update(float deltaTime) {
     }
     float rotSpeed = player->speed.y*dt;
     
+
+    //note to self : this needs to be refactored to a rotation matrix mult
     if(*this->keymn['d']) {
         // both camera direction and camera plane must be rotated
         float oldDirX = player->dir.x;
@@ -180,6 +181,7 @@ void RenderWindow::SetColorP(const Pixel3u& color) {
 void RenderWindow::DrawSurface() {
     SDL_Texture* tex = SDL_CreateTextureFromSurface(this->ren,this->surface);
     SDL_RenderCopy(this->ren,tex,nullptr,nullptr);
+    SDL_DestroyTexture(tex);
 }
 
 void RenderWindow::DrawRays() {

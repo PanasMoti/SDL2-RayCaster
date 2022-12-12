@@ -14,6 +14,7 @@ void Image::NotFound() {
     for(int i = 0; i < this->width*this->height*3; i+=3) {
         this->data.push_back(Pixel3u(temp[i],temp[i+1],temp[i+2]));
     }
+    ifs.close();
 }
 
 Pixel3u Image::operator[](size_t i) const {
@@ -30,6 +31,8 @@ Image::Image(const char* path) {
         PNM::Info info;
         std::vector<uint8_t> temp;
         ifs >> PNM::load(temp, info);
+        ifs.close();
+
         if(!info.valid()) throw std::exception();
         this->width = info.width();
         this->height = info.height();
@@ -37,6 +40,7 @@ Image::Image(const char* path) {
         {
             this->data.push_back(Pixel3u(temp[i], temp[i + 1], temp[i + 2]));
         }
+        
     }
     catch(const std::exception& e)
     {
