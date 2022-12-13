@@ -27,5 +27,11 @@ std::ostream& operator<<(std::ostream& os, const Pixel3u& pixel) {
 
 uint32_t Pixel3u::ToSurfacePixel() const {
     return (this->r << 16) | (this->g << 8) | (this->b << 0);
-        //? [R] [G] [B] [A]
+        //? [R] [G] [B]
+}
+
+Pixel3u::Pixel3u(const std::string& hex) 
+{
+    const char* format = (hex.find('#') != std::string::npos)?  "#%02hhx%02hhx%02hhx" : "%02hhx%02hhx%02hhx";
+    sscanf(hex.c_str(),format,&this->r,&this->g,&this->b);
 }

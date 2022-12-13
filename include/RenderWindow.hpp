@@ -48,46 +48,47 @@ static inline int worldMap[mapWidth][mapHeight]=
 //note to self: i should probably remove the origion point and the related functions since i am not using them
 class RenderWindow 
 {
-    public:
-        RenderWindow(const char*,int,int);
-        void SetColor(float3);
-        SDL_Renderer* GetRen();
-        void BeginDraw();
-        void EndDraw();
-        float2 TranslatePoint(float2);
-        void CleanUp();
-        bool ShouldClose();
-        void HandleEvent(SDL_Event*);
-        void DrawLineF(float2,float2);
-        void HandleInput(SDL_KeyboardEvent*);
-        void KeysDown();
-        void Update(float deltaTime);
-        void TranslateOrigin(float2);
-        void TranslateOrigin(float,float);
-        void ResetOrigin();
-        void DrawPoint(float2,float2 size = {8.0f,8.0f});
-        void DrawMouse();
-        float2 GetMouse();
-        void VertLine(int x,int y0,int y1,float3 color);
-        void SetColorP(const Pixel3u&);
-        void DrawRays();
-        void SetPixel(int x,int y, Uint32 pixel);
-        void DrawSurface();
-        void ClearSurfaceBuffer();
-    private:
-        SDL_Window* win;
-        SDL_Renderer* ren;
-        uint2 res;
-        float2 O;
-        linalg::mat<float,2,2> H;
-        Uint32 bg;
-        bool shouldClose;
-        KeyboardManager keymn;
-        int2 mouse;
-        Player* player;
-        std::array<Image,5> textures;
-        SDL_Surface* surface;
+public:
+  RenderWindow(const char *, int, int);
+  void SetColor(float3);
+  SDL_Renderer *GetRen();
+  void BeginDraw();
+  void EndDraw();
+  float2 TranslatePoint(float2);
+  void CleanUp();
+  bool ShouldClose();
+  void HandleEvent(SDL_Event *);
+  void DrawLineF(float2, float2);
+  void HandleInput(SDL_KeyboardEvent *);
+  void KeysDown();
+  void Update(float deltaTime);
+  void TranslateOrigin(float2);
+  void TranslateOrigin(float, float);
+  void ResetOrigin();
+  void DrawPoint(float2, float2 size = {8.0f, 8.0f});
+  void DrawMouse();
+  float2 GetMouse();
+  void VertLine(int x, int y0, int y1, float3 color);
+  void SetColorP(const Pixel3u &);
+  void DrawRays();
+  void SetPixel(int x, int y, Uint32 pixel);
+  void DrawSurface();
+  void ClearSurfaceBuffer();
 
+  void Dark(Uint8 c);
+private:
+  SDL_Window *win;
+  SDL_Renderer *ren;
+  uint2 res;
+  float2 O;
+  linalg::mat<float, 2, 2> H;
+  Pixel3u bg;
+  bool shouldClose;
+  KeyboardManager keymn;
+  int2 mouse;
+  Player *player;
+  std::array<Image, 7> textures;
+  SDL_Surface *surface;
 };
 
 

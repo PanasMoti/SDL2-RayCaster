@@ -3,7 +3,8 @@
     "files.associations": {
         "iostream": "cpp",
         "*.tcc": "cpp",
-        "limits": "cpp"
+        "limits": "cpp",
+        "array": "cpp"
     },
     "better-comments.tags": [
         {
@@ -61,9 +62,5 @@
             "italic": true
         }
     ],
-    "workbench.colorCustomizations": {
-        "activityBar.background": "#1B3130",
-        "titleBar.activeBackground": "#264543",
-        "titleBar.activeForeground": "#F8FBFB"
-    }
+
 }

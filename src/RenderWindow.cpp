@@ -2,7 +2,11 @@
 #include <iostream>
 
 
-bool temp1 = false;
+
+#define FLOOR_INDEX 5
+#define CEIL_INDEX 6
+
+
 
 RenderWindow::RenderWindow(const char* title,int width,int height)
     :ren(NULL),win(NULL)
@@ -19,16 +23,22 @@ RenderWindow::RenderWindow(const char* title,int width,int height)
     this->keymn = KeyboardManager("wasd");
     this->mouse = {0,0};
     this->player = new Player();
-    this->textures[0] = Image("res/rock.ppm");
-    this->textures[1] = Image("res/tex.ppm");
-    this->textures[2] = Image("res/tex1.ppm");
-    this->textures[3] = Image("res/tex2.ppm");
-    this->textures[4] = Image("res/tex3.ppm");
+    this->textures[0] = Image("res/Brick3.ppm");
+    this->textures[1] = Image("res/limestone.ppm");
+    this->textures[2] = Image("res/pattern.ppm");
+    this->textures[3] = Image("res/Wood1.ppm");
+    this->textures[4] = Image("res/pattern5.ppm");
+    this->textures[5] = Image("res/floor.ppm"); //? floortiles
+    // this->textures[6] = Image("res/ceil.ppm"); //? ceiltiles
     this->surface = SDL_CreateRGBSurface(
         0,this->res.x,this->res.y,32,0,0,0,0
     );
-    this->bg = 255;
+    this->bg = Pixel3u("#012453");
     
+}
+
+void RenderWindow::Dark(Uint8 c) {
+    SDL_SetSurfaceColorMod(this->surface,c,c,c);
 }
 
 void RenderWindow::SetPixel(int x,int y, Uint32 pixel) {
@@ -48,8 +58,10 @@ void RenderWindow::SetColor(linalg::aliases::float3 color) {
 
 void RenderWindow::ClearSurfaceBuffer() {
     SDL_LockSurface(this->surface);
-    SDL_memset(surface->pixels, this->bg, surface->h * surface->pitch);
+    SDL_memset(surface->pixels, 0, surface->h * surface->pitch);
+    
     SDL_UnlockSurface(this->surface);
+    SDL_FillRect(this->surface,nullptr,this->bg.ToSurfacePixel());
 }
 
 void RenderWindow::BeginDraw() {
@@ -99,10 +111,6 @@ void RenderWindow::HandleInput(SDL_KeyboardEvent* event) {
 }
 
 void RenderWindow::Update(float deltaTime) {
-    if(this->bg == 255) temp1 = true;
-    if(this->bg == 1) temp1 = false;
-    if(temp1) this->bg--;
-    else this->bg++;
     float dt = 0.001f*deltaTime;
     SDL_GetMouseState(&this->mouse.x,&this->mouse.y);
     float moveSpeed = player->speed.x*dt;
@@ -114,7 +122,6 @@ void RenderWindow::Update(float deltaTime) {
         player->pos -= player->dir*moveSpeed;
     }
     float rotSpeed = player->speed.y*dt;
-    
 
     //note to self : this needs to be refactored to a rotation matrix mult
     if(*this->keymn['d']) {
@@ -187,8 +194,58 @@ void RenderWindow::DrawSurface() {
 void RenderWindow::DrawRays() {
     int w = this->res.x;
     int h = this->res.y;
+    //* FLOOR CASTING
+    for(int y = h/2 + 1; y < h; y++) {
+        //? rayDir for leftmost ray (x = 0) and rightmost ray (x = w)
+        float2 rayDir0 = player->dir - player->plane;
+        float2 rayDir1 = player->dir + player->plane;
+        int p = y - screenHeight / 2; //? Current y position compared to the center of the screen (the horizon)
+        float posZ = 0.5 * screenHeight;//? Vertical position of the camera.
+
+        //? Horizontal distance from the camera to the floor for the current row.
+        //? 0.5 is the z position exactly in the middle between floor and ceiling.
+        float rowDistance = posZ / p;
+
+        // calculate the real world step vector we have to add for each x (parallel to camera plane)
+        // adding step by step avoids multiplications with a weight in the inner loop
+        float2 floorStep = rowDistance* (rayDir1-rayDir0)/screenWidth;
+  
+
+        // real world coordinates of the leftmost column. This will be updated as we step to the right.
+        float2 floorP = player->pos + rowDistance*rayDir0;
+        for(int x = 0; x < screenWidth; x++)
+        {
+            int texWidth = this->textures[FLOOR_INDEX].Width();
+            int texHeight = this->textures[FLOOR_INDEX].Height();
+            //? the cell coord is simply got from the integer parts of floorX and floorY
+            int cellX = (int)floorP.x;
+            int cellY = (int)floorP.y;
+            //? get the texture coordinate from the fractional part
+            int tx = (int)(texWidth * (floorP.x - cellX)) & (texWidth - 1);
+            int ty = (int)(texHeight * (floorP.y - cellY)) & (texHeight - 1);
+            floorP += floorStep;
+            //? choose texture and draw the pixel
+            Pixel3u color;
+            color = this->textures[FLOOR_INDEX][texWidth*ty+tx];
+            color = color*0.7; //? making the floors darker
+            this->SetPixel(x,y,color.ToSurfacePixel());
+
+
+            // //? ceiling (symmetrical, at screenHeight - y - 1 instead of y)
+            // //? recalculating texture sizes for the ceil texture since they maybe of different sizes
+            // texWidth = this->textures[CEIL_INDEX].Width();
+            // texHeight = this->textures[FLOOR_INDEX].Height();
+            // tx = (int)(texWidth * (floorP.x - cellX)) & (texWidth - 1);
+            // ty = (int)(texHeight * (floorP.y - cellY)) & (texHeight - 1);
+            // color = this->textures[CEIL_INDEX][texWidth*ty+tx];
+            // this->SetPixel(x,screenHeight-1-y,color.ToSurfacePixel());
+        }
+    }
+
+
+
+    //* WALL CASTING
     for(int x = 0; x < w; x++) {
-        #pragma region Mathematics -- DO NOT TOUCH
         float cameraX = 2*x/float(w)-1;
         float2 rayDir = player->dir + player->plane*cameraX;
         int2 map = {int(player->pos.x),int(player->pos.y)};
@@ -274,7 +331,6 @@ void RenderWindow::DrawRays() {
 
         float stepT = 1.0f*texHeight/lineHeight;
         float texPos = (drawStart - h / 2 + lineHeight / 2) * stepT;
-        #pragma endregion
 
         //* storing the colors of the pixels to a buffer (surface)
         for(int y = drawStart; y < drawEnd; y++) {

@@ -14,6 +14,7 @@ struct Pixel3u
     Pixel3u(int,int,int);
     Pixel3u();
     Pixel3u(const Pixel3u&);
+    Pixel3u(const std::string&);
 
     Pixel3u operator*(float v) const;
     Pixel3u operator~() const;
