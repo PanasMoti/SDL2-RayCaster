@@ -68,6 +68,7 @@ void RenderWindow::BeginDraw() {
     
 }
 void RenderWindow::EndDraw() {
+    this->DrawSurface();
     SDL_RenderPresent(this->ren);
 }
 void RenderWindow::CleanUp() {
@@ -195,17 +196,19 @@ void RenderWindow::SetColorP(const Pixel3u& color) {
 void RenderWindow::DrawSurface() {
     SDL_Texture* tex = SDL_CreateTextureFromSurface(this->ren,this->surface);
     SDL_RenderCopy(this->ren,tex,nullptr,nullptr);
-    SDL_DestroyTexture(tex);
+    SDL_DestroyTexture(tex);    
 }
 
 void RenderWindow::DrawRays() {
     int w = this->res.x;
     int h = this->res.y;
     //* FLOOR CASTING
-    for(int y = h/2 + 1; y < h; y++) {
+    float2 rayDir0 = player->dir - player->plane;
+    float2 rayDir1 = player->dir + player->plane;
+    for (int y = h / 2 + 1; y < h; y++)
+    {
         //? rayDir for leftmost ray (x = 0) and rightmost ray (x = w)
-        float2 rayDir0 = player->dir - player->plane;
-        float2 rayDir1 = player->dir + player->plane;
+        
         int p = y - screenHeight / 2; //? Current y position compared to the center of the screen (the horizon)
         float posZ = 0.5 * screenHeight;//? Vertical position of the camera.
 
@@ -233,7 +236,7 @@ void RenderWindow::DrawRays() {
             floorP += floorStep;
             //? choose texture and draw the pixel
             Pixel3u color;
-            float shade = 1/powf(linalg::distance(this->player->pos,floorP),2);
+            float shade = powf(linalg::distance(this->player->pos,floorP),-2);
             color = this->textures[FLOOR_INDEX][texWidth*ty+tx];
 
             color.Shade(1-shade); //? making the floors that are further darker
@@ -251,8 +254,6 @@ void RenderWindow::DrawRays() {
             // this->SetPixel(x,screenHeight-1-y,color.ToSurfacePixel());
         }
     }
-
-
 
     //* WALL CASTING
     for(int x = 0; x < w; x++) {
@@ -341,7 +342,7 @@ void RenderWindow::DrawRays() {
 
         float stepT = 1.0f*texHeight/lineHeight;
         float texPos = (drawStart - h / 2 + lineHeight / 2) * stepT;
-        float shade = 1/powf(perpWallDist,2);
+        float shade = 2.5*powf(perpWallDist,-2);
         //* storing the colors of the pixels to a buffer (surface)
         for(int y = drawStart; y < drawEnd; y++) {
             // Cast the texture coordinate to integer, and mask with (texHeight - 1) in case of overflow
@@ -354,5 +355,5 @@ void RenderWindow::DrawRays() {
             this->SetPixel(x,y,color.ToSurfacePixel());
         }
     }
-    this->DrawSurface(); //? draw all the pixels at one go from the buffer
+    // this->DrawSurface(); //? draw all the pixels at one go from the buffer
 }
