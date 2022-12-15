@@ -6,7 +6,7 @@
 #define FLOOR_INDEX 5
 #define CEIL_INDEX 6
 
-
+bool temp_toggle = false;
 
 RenderWindow::RenderWindow(const char* title,int width,int height)
     :ren(NULL),win(NULL)
@@ -16,11 +16,11 @@ RenderWindow::RenderWindow(const char* title,int width,int height)
     if(win == NULL) {
         fprintf(stderr,"%s\n",SDL_GetError());
     }
-    this->ren = SDL_CreateRenderer(this->win,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    this->ren = SDL_CreateRenderer(this->win,-1,SDL_RENDERER_ACCELERATED);
     this->O = 0.5f*this->res;
     this->H = {{1.0f,0.0f},{0.0f,1.0f}};
     this->shouldClose = false;
-    this->keymn = KeyboardManager("wasd");
+    this->keymn = KeyboardManager("wasdh");
     this->mouse = {0,0};
     this->player = new Player();
     this->textures[0] = Image("res/Brick3.ppm");
@@ -29,12 +29,11 @@ RenderWindow::RenderWindow(const char* title,int width,int height)
     this->textures[3] = Image("res/Wood1.ppm");
     this->textures[4] = Image("res/pattern5.ppm");
     this->textures[5] = Image("res/floor.ppm"); //? floortiles
-    // this->textures[6] = Image("res/ceil.ppm"); //? ceiltiles
+    this->textures[6] = Image("res/Wood2.ppm"); //? ceiltiles
     this->surface = SDL_CreateRGBSurface(
         0,this->res.x,this->res.y,32,0,0,0,0
     );
-    this->bg = Pixel3u("#012453");
-    
+    this->bg = Pixel3u("#012453");    
 }
 
 void RenderWindow::Dark(Uint8 c) {
@@ -59,7 +58,6 @@ void RenderWindow::SetColor(linalg::aliases::float3 color) {
 void RenderWindow::ClearSurfaceBuffer() {
     SDL_LockSurface(this->surface);
     SDL_memset(surface->pixels, 0, surface->h * surface->pitch);
-    
     SDL_UnlockSurface(this->surface);
     SDL_FillRect(this->surface,nullptr,this->bg.ToSurfacePixel());
 }
@@ -73,6 +71,8 @@ void RenderWindow::EndDraw() {
     SDL_RenderPresent(this->ren);
 }
 void RenderWindow::CleanUp() {
+    SDL_FreeSurface(this->surface);
+    delete this->player;
     SDL_DestroyRenderer(this->ren);
     SDL_DestroyWindow(this->win);
 }
@@ -115,6 +115,13 @@ void RenderWindow::Update(float deltaTime) {
     SDL_GetMouseState(&this->mouse.x,&this->mouse.y);
     float moveSpeed = player->speed.x*dt;
     //todo: need to check if there is a wall infront of the player or behind them
+    if(*this->keymn['h']) {
+        //todo add debuggin shit here
+        temp_toggle = true;
+    }
+    else {
+        temp_toggle = false;
+    }
     if(*this->keymn['w']) {
         player->pos += player->dir*moveSpeed;
     }
@@ -226,8 +233,11 @@ void RenderWindow::DrawRays() {
             floorP += floorStep;
             //? choose texture and draw the pixel
             Pixel3u color;
+            float shade = 1/powf(linalg::distance(this->player->pos,floorP),2);
             color = this->textures[FLOOR_INDEX][texWidth*ty+tx];
-            color = color*0.7; //? making the floors darker
+
+            color.Shade(1-shade); //? making the floors that are further darker
+            if(temp_toggle) color.Tint(0.01*shade,0.01*shade,0.5*shade);
             this->SetPixel(x,y,color.ToSurfacePixel());
 
 
@@ -331,14 +341,16 @@ void RenderWindow::DrawRays() {
 
         float stepT = 1.0f*texHeight/lineHeight;
         float texPos = (drawStart - h / 2 + lineHeight / 2) * stepT;
-
+        float shade = 1/powf(perpWallDist,2);
         //* storing the colors of the pixels to a buffer (surface)
         for(int y = drawStart; y < drawEnd; y++) {
             // Cast the texture coordinate to integer, and mask with (texHeight - 1) in case of overflow
             int texY = (int)texPos & (texHeight - 1);
             texPos += stepT;
-            float s = (side == 1) ? 0.5f : 1.0f;
-            Pixel3u color = this->textures[texNum](texX,texY)*s;
+            Pixel3u color = this->textures[texNum](texX,texY);
+            color.Shade(1-shade);
+            if(temp_toggle) color.Tint(0.01*shade,0.01*shade,0.5*shade);
+            // color.Shade(1-shade,1-shade,shade*0.05f);
             this->SetPixel(x,y,color.ToSurfacePixel());
         }
     }

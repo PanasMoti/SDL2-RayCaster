@@ -18,6 +18,11 @@ struct Pixel3u
 
     Pixel3u operator*(float v) const;
     Pixel3u operator~() const;
+    
+    void Shade(float shade);
+    void Shade(float shadeR,float shadeG,float shadeB);
+    void Tint(float tint);
+    void Tint(float tintR,float tintG,float tintB);
 
     uint32_t ToSurfacePixel() const;
 
